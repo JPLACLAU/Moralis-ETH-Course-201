@@ -1,7 +1,7 @@
 pragma solidity 0.8.0;
 pragma abicoder v2;
 import "./Ownable.sol";
-import "./SafeMath.sol";
+import "./SafeMath.sol"; //safemath is no longer needed in 0.8
 
 contract Bank is Ownable {
     using SafeMath for uint;
