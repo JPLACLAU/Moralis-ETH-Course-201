@@ -1,17 +1,20 @@
 pragma solidity ^0.8.0;
 
 contract Kittycontract {
-
     string public constant name = "TestKitties";
     string public constant symbol = "TK";
-    
-    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+
+    event Transfer(
+        address indexed from,
+        address indexed to,
+        uint256 indexed tokenId
+    );
 
     event Birth(
-        address owner, 
-        uint256 kittenId, 
-        uint256 mumId, 
-        uint256 dadId, 
+        address owner,
+        uint256 kittenId,
+        uint256 mumId,
+        uint256 dadId,
         uint256 genes
     );
 
@@ -25,12 +28,13 @@ contract Kittycontract {
 
     Kitty[] kitties;
 
-    mapping (uint256 => address) public kittyIndexToOwner;
-    mapping (address => uint256) ownershipTokenCount;
+    mapping(uint256 => address) public kittyIndexToOwner;
 
-    
+    mapping(address => uint256) ownershipTokenCount;
 
-    function balanceOf(address owner) external view returns (uint256 balance){
+    mapping(address => uint256[]) ownerToCats;
+
+    function balanceOf(address owner) external view returns (uint256 balance) {
         return ownershipTokenCount[owner];
     }
 
@@ -38,32 +42,24 @@ contract Kittycontract {
         return kitties.length;
     }
 
-    function ownerOf(uint256 _tokenId) external view returns (address)
-    {
+    function ownerOf(uint256 _tokenId) external view returns (address) {
         return kittyIndexToOwner[_tokenId];
     }
 
-    function transfer(address _to,uint256 _tokenId) external
-    {
+    function transfer(address _to, uint256 _tokenId) external {
         require(_to != address(0));
         require(_to != address(this));
         require(_owns(msg.sender, _tokenId));
 
         _transfer(msg.sender, _to, _tokenId);
     }
-    
-    function getAllCatsFor(address _owner) external view returns (uint[] memory cats){
-        uint[] memory result = new uint[](ownershipTokenCount[_owner]);
-        uint counter = 0;
-        for (uint i = 0; i < kitties.length; i++) {
-            if (kittyIndexToOwner[i] == _owner) {
-                result[counter] = i;
-                counter++;
-            }
-        }
-        return result;
+
+    function getAllCatsFor(
+        address _owner
+    ) external view returns (uint[] memory cats) {
+        return ownerToCats[_owner];
     }
-    
+
     function createKittyGen0(uint256 _genes) public returns (uint256) {
         return _createKitty(0, 0, 0, _genes, msg.sender);
     }
@@ -82,7 +78,7 @@ contract Kittycontract {
             dadId: uint32(_dadId),
             generation: uint16(_generation)
         });
-        
+
         kitties.push(_kitty);
 
         uint256 newKittenId = kitties.length - 1;
@@ -92,24 +88,40 @@ contract Kittycontract {
         _transfer(address(0), _owner, newKittenId);
 
         return newKittenId;
-
     }
 
     function _transfer(address _from, address _to, uint256 _tokenId) internal {
         ownershipTokenCount[_to]++;
 
         kittyIndexToOwner[_tokenId] = _to;
+        ownerToCats[_to].push(_tokenId);
 
         if (_from != address(0)) {
             ownershipTokenCount[_from]--;
+            _removeTokenIdFromOwner(_from, _tokenId);
         }
 
         // Emit the transfer event.
         emit Transfer(_from, _to, _tokenId);
     }
 
-    function _owns(address _claimant, uint256 _tokenId) internal view returns (bool) {
-      return kittyIndexToOwner[_tokenId] == _claimant;
-  }
+    function _removeTokenIdFromOwner(
+        address _owner,
+        uint256 _tokenId
+    ) internal {
+        uint256 lastId = ownerToCats[_owner][ownerToCats[_owner].length - 1];
+        for (uint i = 0; i < ownerToCats[_owner].length; i++) {
+            if (ownerToCats[_owner][i] == _tokenId) {
+                ownerToCats[_owner][i] = lastId;
+                ownerToCats[_owner].pop();
+            }
+        }
+    }
 
+    function _owns(
+        address _claimant,
+        uint256 _tokenId
+    ) internal view returns (bool) {
+        return kittyIndexToOwner[_tokenId] == _claimant;
+    }
 }
