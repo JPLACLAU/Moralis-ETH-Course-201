@@ -3,8 +3,11 @@ pragma solidity 0.8.17;
 contract Helloworld {
     string message = "Hello World!";
 
-    function setMessage(string memory newMessage) public {
+    function setMessage(
+        string memory newMessage
+    ) public payable returns (string memory) {
         message = newMessage;
+        return message;
     }
 
     function getMessage() public view returns (string memory) {
