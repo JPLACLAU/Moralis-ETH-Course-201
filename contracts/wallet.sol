@@ -20,5 +20,14 @@ contract Wallet {
 
     function deposit(uint amount, bytes32 ticker) external {}
 
-    function withdraw(uint amount, bytes32 ticker) external {}
+    function withdraw(uint amount, bytes32 ticker) external {
+        require(tokenMapping[ticker].tokenAddress != (0));
+        require(
+            balances[msg.sender][ticker] >= amount,
+            "Balance not sufficient"
+        );
+
+        balances[msg.sender][ticker] = balances[msg.sender][ticker].sub(amount);
+        IERC20(tokenMapping[ticker].tokenAddress).transfer(msg.sender, amount);
+    }
 }
