@@ -2,11 +2,9 @@ pragma solidity ^0.8.0;
 //SPDX-License-Identifier: UNLICENSED
 
 import "../node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "../node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
-import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
 
-contract MyToken is ERC20Capped, Ownable {
-    constructor() ERC20("MyToken", "MTKN") ERC20Capped(100000) {
+contract Link is ERC20 {
+    constructor() public ERC20("Chainlink", "LINK") {
         _mint(msg.sender, 1000);
     }
 }
