@@ -2,32 +2,59 @@ pragma solidity ^0.8.0;
 //SPDX-License-Identifier: UNLICENSED
 
 import "../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
+import "../node_modules/@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract Wallet {
+contract Wallet is Ownable {
+    using SafeMath for uint256;
     struct Token {
-        bytes32 ticker;
+        string ticker;
         address tokenAddress;
     }
-    mapping(bytes32 => Token) public tokenMapping;
-    bytes32[] public tokenList;
 
-    mapping(address => mapping(bytes32 => uint256)) public balances;
+    mapping(string => Token) public tokens;
+    string[] public tokenList;
+    mapping(address => mapping(string => uint256)) public traderBalances;
 
-    function addToken(bytes32 ticker, address tolenAddress) external {
-        tokenMapping[ticker] = Token(ticker, tokenAddress);
+    function addToken(
+        string memory ticker,
+        address tokenAddress
+    ) external onlyOwner {
+        tokens[ticker] = Token(ticker, tokenAddress);
         tokenList.push(ticker);
     }
 
-    function deposit(uint amount, bytes32 ticker) external {}
-
-    function withdraw(uint amount, bytes32 ticker) external {
-        require(tokenMapping[ticker].tokenAddress != (0));
-        require(
-            balances[msg.sender][ticker] >= amount,
-            "Balance not sufficient"
+    function deposit(
+        uint amount,
+        string memory ticker
+    ) external tokenExist(ticker) {
+        IERC20(tokens[ticker].tokenAddress).transferFrom(
+            msg.sender,
+            address(this),
+            amount
         );
+        traderBalances[msg.sender][ticker] = traderBalances[msg.sender][ticker]
+            .add(amount);
+    }
 
-        balances[msg.sender][ticker] = balances[msg.sender][ticker].sub(amount);
-        IERC20(tokenMapping[ticker].tokenAddress).transfer(msg.sender, amount);
+    function withdraw(
+        uint amount,
+        string memory ticker
+    ) external tokenExist(ticker) {
+        require(
+            traderBalances[msg.sender][ticker] >= amount,
+            "balance too low"
+        );
+        traderBalances[msg.sender][ticker] = traderBalances[msg.sender][ticker]
+            .sub(amount);
+        IERC20(tokens[ticker].tokenAddress).transfer(msg.sender, amount);
+    }
+
+    modifier tokenExist(string memory ticker) {
+        require(
+            tokens[ticker].tokenAddress != address(0),
+            "this token does not exist"
+        );
+        _;
     }
 }
