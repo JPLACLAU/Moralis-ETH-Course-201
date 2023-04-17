@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/JPLACLAU/Moralis-ETH-Course-201#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.8.0"
+    "@openzeppelin/contracts": "^4.8.3"
   }
 }
